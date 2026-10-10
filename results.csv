@@ -1,0 +1,10 @@
+mode,seed,encoder,weights,epochs,best_epoch,valid_iou,test_iou
+s2,0,resnet34,imagenet,30,27,0.8006,0.821
+s2,1,resnet34,imagenet,30,29,0.8118,0.8313
+s2,2,resnet34,imagenet,30,29,0.7964,0.8334
+s1,0,resnet34,imagenet,30,26,0.6324,0.6551
+s1,1,resnet34,imagenet,30,15,0.6372,0.6484
+s1,2,resnet34,imagenet,30,27,0.6387,0.657
+both,0,resnet34,imagenet,30,17,0.7917,0.7923
+both,1,resnet34,imagenet,30,30,0.8052,0.8299
+both,2,resnet34,imagenet,30,25,0.8077,0.8129
