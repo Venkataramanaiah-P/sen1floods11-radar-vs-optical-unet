@@ -8,8 +8,10 @@ I trained flood-mapping U-Nets on three kinds of input (optical only, radar only
 
 - **Learning beat the simple rules for both sensors:** optical +0.057 over NDWI, radar +0.130 over a VH threshold.
 - **Radar alone is stable but well behind optical:** about 0.65 against 0.83 test IoU.
-- **Adding radar to optical gave no gain in this experiment**, and the fused model was less consistent from run to run. I did not find evidence that radar helped here. I am not claiming it hurts, because three runs per model is a small sample and the ranges overlap.
 
+- **On clear-sky chips, adding radar to optical gave no gain in this experiment**, and the fused model was less consistent from run to run. I am not claiming it hurts, because three runs per model is a small sample and the ranges overlap.
+- **With simulated clouds, radar helps (Part 2 below):** +0.06 IoU with 25% of the optical image visible and +0.15 with 10% visible.
+  
 ## Results (test IoU, 90 test chips)
 
 | Method | Mean test IoU | Lowest | Highest | Runs |
@@ -57,14 +59,14 @@ The two rules were tuned on the training chips only (NDWI: train 0.651, valid 0.
 
 
 1. **Label origin.** The labels were made with help from Sentinel-2 imagery, so optical inputs may have an advantage. The result may not hold for labels made another way.
-2. **cloud simulation is in Part 2.** Radar's main advantage is seeing through cloud, and I did not simulate cloud-covered optical images.
+2. **No clouds in Part 1.** Radar's main advantage is seeing through cloud, and Part 1 used clear-sky chips only. Part 2 below adds a cloud simulation.
 3. **One fusion design.** I only tried early fusion (stacking all layers). Other designs, such as separate encoders per sensor, may behave differently.
 4. **Same events in train and test.** The test chips come from the same flood events as the training chips, which is easier than predicting a flood in a new region.
 5. **Small sample.** Three runs per input type shows whether the ranges overlap, not a precise difference.
 
 ## What I would test next
 
-- Hide parts of the optical image to simulate cloud, and compare optical-only with fused.
+
 - Hold out a whole flood event for testing.
 - Try a fusion design with separate radar and optical encoders.
 
@@ -119,7 +121,7 @@ This test was suggested by Adam Ruf.
 | 10% | 0.527 | 0.677 | +0.149 |
 | 0% | 0.000 | 0.561 | +0.561 |
 
-![Where does radar start to help?](cloud_plot.png)
+![Where does radar start to help?](cloud_experiment.png)
 
 ### What this shows
 
@@ -131,7 +133,7 @@ This test was suggested by Adam Ruf.
 ### Limitations
 
 - Clouds are simulated with smooth noise. Real clouds also leave haze and shadows that change the optical values instead of zeroing them.
-- Only the optical layers are hidden. Real cloud cover also changes the scenes that were chosen for the dataset.
+- Only the optical layers are hidden. 
 - One dataset (Sen1Floods11), one architecture and one fusion design (channel stacking).
 - The clear-sky numbers here (optical 0.805, fused 0.808) are lower than Part 1 (0.829 and 0.812) because these models were trained with clouds in every epoch. Compare numbers only within the same part.
 - Shaded bands in the chart show the spread across the 3 seeds, not a formal confidence interval. Three seeds is a small sample.
