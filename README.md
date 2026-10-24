@@ -55,8 +55,9 @@ The two rules were tuned on the training chips only (NDWI: train 0.651, valid 0.
 
 ## Limitations
 
+
 1. **Label origin.** The labels were made with help from Sentinel-2 imagery, so optical inputs may have an advantage. The result may not hold for labels made another way.
-2. **Cloud was not tested.** Radar's main advantage is seeing through cloud, and I did not simulate cloud-covered optical images.
+2. **cloud simulation is in Part 2.** Radar's main advantage is seeing through cloud, and I did not simulate cloud-covered optical images.
 3. **One fusion design.** I only tried early fusion (stacking all layers). Other designs, such as separate encoders per sensor, may behave differently.
 4. **Same events in train and test.** The test chips come from the same flood events as the training chips, which is easier than predicting a flood in a new region.
 5. **Small sample.** Three runs per input type shows whether the ranges overlap, not a precise difference.
@@ -90,3 +91,57 @@ Bonafilia, D., Tellman, B., Anderson, T., Issenberg, E. (2020). *Sen1Floods11: a
 
 Venkataramanaiah Poliboyina. 25 years of infrastructure survey experience, now working in GeoAI and remote sensing.
 [GitHub](https://github.com/Venkataramanaiah-P) | [LinkedIn](https://www.linkedin.com/in/venkataramanaiahpoliboyina)
+
+
+## Part 2: Where does radar start to help? (cloud-mask experiment)
+
+Part 1 found no clear benefit from adding radar on clear-sky test chips. Radar (Sentinel-1) is useful because clouds cannot hide it, so this part asks a different question: **how much of the optical image has to be missing before radar starts to matter?**
+
+This test was suggested by Adam Ruf.
+
+### Method
+
+- Same U-Net (ResNet34 encoder) and same Sen1Floods11 split as Part 1.
+- Clouds are **simulated**: a smooth random "cloudiness" map is made for each chip from a fixed seed, and the optical layers (the first 13 input channels) are set to zero where it is cloudy. **Radar layers are never touched.**
+- The same cloud map is used for the optical-only and the fused model on each chip and level, so the comparison is fair.
+- Both models are trained with random clouds (20% of training chips are clear sky, the rest have a random share of the optical image visible) and use the same settings as Part 1 (30 epochs, 3 seeds: 0, 1, 2). The best epoch is picked on a mix of 100%, 50% and 25% visible.
+- Test levels: 100%, 75%, 50%, 25%, 10% and 0% of the optical image visible.
+- The dashed line in the chart is the radar-only U-Net from Part 1 (test IoU 0.653), which clouds cannot affect.
+
+### Results (test IoU)
+
+| Optical visible | Optical only | Fused (optical + radar) | Radar gain |
+|---|---|---|---|
+| 100% | 0.805 | 0.808 | +0.003 |
+| 75% | 0.764 | 0.780 | +0.016 |
+| 50% | 0.718 | 0.748 | +0.030 |
+| 25% | 0.648 | 0.709 | +0.061 |
+| 10% | 0.527 | 0.677 | +0.149 |
+| 0% | 0.000 | 0.561 | +0.561 |
+
+![Where does radar start to help?](cloud_plot.png)
+
+### What this shows
+
+1. **On a clear day radar adds almost nothing** (+0.003 IoU). This is smaller than the difference between seeds (optical-only ranges 0.790 to 0.814, fused 0.803 to 0.813), so it is noise, which is consistent with Part 1.
+2. **The more cloud, the more radar helps.** The gain grows from +0.03 at half cloud to +0.15 when only 10% of the optical image is visible. From 75% visible downwards the fused model's worst seed beats the optical-only model's best seed.
+3. **Below about 25% visible, the optical-only model is worse than the radar-only model** (0.65). Past that point, an optical-only flood map is worse than one made from radar alone.
+4. **A weakness I did not expect:** when the optical image is completely hidden (0%), the fused model scores 0.561, which is **lower than the radar-only model (0.653)**. The three seeds give 0.503, 0.565 and 0.616, so all are below it, but the spread is large. This fused model does not fully fall back to radar. Possible reasons (not tested) are that it only saw a small share of fully hidden chips in training, and that it must also cope with missing optical channels.
+
+### Limitations
+
+- Clouds are simulated with smooth noise. Real clouds also leave haze and shadows that change the optical values instead of zeroing them.
+- Only the optical layers are hidden. Real cloud cover also changes the scenes that were chosen for the dataset.
+- One dataset (Sen1Floods11), one architecture and one fusion design (channel stacking).
+- The clear-sky numbers here (optical 0.805, fused 0.808) are lower than Part 1 (0.829 and 0.812) because these models were trained with clouds in every epoch. Compare numbers only within the same part.
+- Shaded bands in the chart show the spread across the 3 seeds, not a formal confidence interval. Three seeds is a small sample.
+
+### Files added
+
+- `F1_flood_cloud_experiment.ipynb`: the notebook for this part (Colab T4).
+- `cloud_results.csv`: every test result (mode, seed, visibility level, IoU).
+- `cloud_plot.png`: the chart above.
+
+### Reproduce
+
+Open `F1_flood_cloud_experiment.ipynb` in Google Colab, choose **Runtime → Change runtime type → T4 GPU**, and run the cells in order. The last cells train both models with clouds, test them at each visibility level, and draw the plot.
