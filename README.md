@@ -140,7 +140,7 @@ This test was suggested by Adam Ruf.
 
 - `F1_flood_cloud_experiment.ipynb`: the notebook for this part (Colab T4).
 - `cloud_results.csv`: every test result (mode, seed, visibility level, IoU).
-- `cloud_plot.png`: the chart above.
+- `cloud_experiment.png`: the chart above.
 
 ### Reproduce
 
