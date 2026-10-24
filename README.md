@@ -8,7 +8,6 @@ I trained flood-mapping U-Nets on three kinds of input (optical only, radar only
 
 - **Learning beat the simple rules for both sensors:** optical +0.057 over NDWI, radar +0.130 over a VH threshold.
 - **Radar alone is stable but well behind optical:** about 0.65 against 0.83 test IoU.
-
 - **On clear-sky chips, adding radar to optical gave no gain in this experiment**, and the fused model was less consistent from run to run. I am not claiming it hurts, because three runs per model is a small sample and the ranges overlap.
 - **With simulated clouds, radar helps (Part 2 below):** +0.06 IoU with 25% of the optical image visible and +0.15 with 10% visible.
   
@@ -135,7 +134,7 @@ This test was suggested by Adam Ruf.
 - Clouds are simulated with smooth noise. Real clouds also leave haze and shadows that change the optical values instead of zeroing them.
 - Only the optical layers are hidden. 
 - One dataset (Sen1Floods11), one architecture and one fusion design (channel stacking).
-- The clear-sky numbers here (optical 0.805, fused 0.808) are lower than Part 1 (0.829 and 0.812) because these models were trained with clouds in every epoch. Compare numbers only within the same part.
+- The clear-sky numbers here (optical 0.805, fused 0.808) are lower than Part 1 (0.829 and 0.812)probably because these models were trained with clouds in every epoch. Compare numbers only within the same part.
 - Shaded bands in the chart show the spread across the 3 seeds, not a formal confidence interval. Three seeds is a small sample.
 
 ### Files added
